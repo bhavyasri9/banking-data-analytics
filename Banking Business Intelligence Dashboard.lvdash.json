@@ -1,0 +1,1360 @@
+{
+  "datasets": [
+    {
+      "name": "business_summary",
+      "displayName": "business_summary",
+      "queryLines": [
+        "SELECT\n",
+        "  a.BRANCH_ID,\n",
+        "  COUNT(*) AS total_transactions,\n",
+        "  SUM(t.TRANSACTION_AMOUNT) AS total_revenue,\n",
+        "  AVG(t.TRANSACTION_AMOUNT) AS avg_transaction\n",
+        "FROM\n",
+        "  workspace.default.silvertransactions t\n",
+        "    JOIN workspace.default.silveraccounts a\n",
+        "      ON t.ACCOUNT_ID = a.ACCOUNT_ID\n",
+        "GROUP BY\n",
+        "  a.BRANCH_ID"
+      ]
+    },
+    {
+      "name": "monthly_revenue_sql",
+      "displayName": "monthly_revenue_sql",
+      "queryLines": [
+        "SELECT\n",
+        "  date_format(t.TRANSACTION_DATE, 'yyyy-MM') AS month,\n",
+        "  a.BRANCH_ID,\n",
+        "  SUM(t.TRANSACTION_AMOUNT) AS revenue\n",
+        "FROM\n",
+        "  workspace.default.silvertransactions t\n",
+        "    JOIN workspace.default.silveraccounts a\n",
+        "      ON t.ACCOUNT_ID = a.ACCOUNT_ID\n",
+        "GROUP BY\n",
+        "  month,\n",
+        "  a.BRANCH_ID\n",
+        "ORDER BY\n",
+        "  month DESC"
+      ]
+    },
+    {
+      "name": "top_customers",
+      "displayName": "top_customers_by_spending",
+      "queryLines": [
+        "SELECT\n",
+        "  a.CUSTOMER_ID,\n",
+        "  a.BRANCH_ID,\n",
+        "  SUM(t.TRANSACTION_AMOUNT) AS total_spent\n",
+        "FROM\n",
+        "  workspace.default.silvertransactions t\n",
+        "    JOIN workspace.default.silveraccounts a\n",
+        "      ON t.ACCOUNT_ID = a.ACCOUNT_ID\n",
+        "GROUP BY\n",
+        "  a.CUSTOMER_ID,\n",
+        "  a.BRANCH_ID\n",
+        "ORDER BY\n",
+        "  total_spent DESC\n",
+        "LIMIT 5"
+      ]
+    },
+    {
+      "name": "branch_revenue",
+      "displayName": "branch_revenue",
+      "queryLines": [
+        "SELECT\n",
+        "  a.BRANCH_ID,\n",
+        "  SUM(t.TRANSACTION_AMOUNT) AS branch_revenue\n",
+        "FROM\n",
+        "  workspace.default.silvertransactions t\n",
+        "    JOIN workspace.default.silveraccounts a\n",
+        "      ON t.ACCOUNT_ID = a.ACCOUNT_ID\n",
+        "GROUP BY\n",
+        "  a.BRANCH_ID\n",
+        "ORDER BY\n",
+        "  branch_revenue DESC\n",
+        "LIMIT 10"
+      ]
+    },
+    {
+      "name": "txn_type_analysis",
+      "displayName": "transaction_type_analysis",
+      "queryLines": [
+        "SELECT\n",
+        "  t.TRANSACTION_TYPE,\n",
+        "  a.BRANCH_ID,\n",
+        "  COUNT(*) AS txn_count,\n",
+        "  SUM(t.TRANSACTION_AMOUNT) AS total_amount\n",
+        "FROM\n",
+        "  workspace.default.silvertransactions t\n",
+        "    JOIN workspace.default.silveraccounts a\n",
+        "      ON t.ACCOUNT_ID = a.ACCOUNT_ID\n",
+        "GROUP BY\n",
+        "  t.TRANSACTION_TYPE,\n",
+        "  a.BRANCH_ID"
+      ]
+    },
+    {
+      "name": "monthly_txn_count",
+      "displayName": "monthly_txn_count",
+      "queryLines": [
+        "SELECT\n",
+        "  date_format(t.TRANSACTION_DATE, 'yyyy-MM') AS month,\n",
+        "  a.BRANCH_ID,\n",
+        "  COUNT(*) AS txn_count\n",
+        "FROM\n",
+        "  workspace.default.silvertransactions t\n",
+        "    JOIN workspace.default.silveraccounts a\n",
+        "      ON t.ACCOUNT_ID = a.ACCOUNT_ID\n",
+        "GROUP BY\n",
+        "  month,\n",
+        "  a.BRANCH_ID\n",
+        "ORDER BY\n",
+        "  month DESC"
+      ]
+    },
+    {
+      "name": "high_risk_customers",
+      "displayName": "high_risk_customers",
+      "queryLines": [
+        "SELECT\n",
+        "  a.CUSTOMER_ID,\n",
+        "  COUNT(*) AS txn_count,\n",
+        "  SUM(t.TRANSACTION_AMOUNT) AS total_amount,\n",
+        "  AVG(t.TRANSACTION_AMOUNT) AS avg_amount,\n",
+        "  MAX(t.TRANSACTION_AMOUNT) AS max_amount,\n",
+        "  ROUND(\n",
+        "    (COUNT(*) * 0.3)\n",
+        "      + (AVG(t.TRANSACTION_AMOUNT) / 1000 * 0.5)\n",
+        "      + (SUM(t.TRANSACTION_AMOUNT) / 10000 * 0.2),\n",
+        "    2\n",
+        "  ) AS risk_score\n",
+        "FROM\n",
+        "  workspace.default.silvertransactions t\n",
+        "    JOIN workspace.default.silveraccounts a\n",
+        "      ON t.ACCOUNT_ID = a.ACCOUNT_ID\n",
+        "GROUP BY\n",
+        "  a.CUSTOMER_ID\n",
+        "HAVING\n",
+        "  COUNT(*) > 10\n",
+        "  OR AVG(t.TRANSACTION_AMOUNT) > 60000\n",
+        "ORDER BY\n",
+        "  risk_score DESC\n",
+        "LIMIT 5"
+      ]
+    },
+    {
+      "name": "customer_risk_scores",
+      "displayName": "customer_risk_scores",
+      "queryLines": [
+        "SELECT\n",
+        "  a.CUSTOMER_ID,\n",
+        "  ROUND(\n",
+        "    (COUNT(*) * 0.3)\n",
+        "      + (AVG(t.TRANSACTION_AMOUNT) / 1000 * 0.5)\n",
+        "      + (SUM(t.TRANSACTION_AMOUNT) / 10000 * 0.2),\n",
+        "    2\n",
+        "  ) AS Risk_Score,\n",
+        "  COUNT(*) AS Txn_Count\n",
+        "FROM\n",
+        "  workspace.default.silvertransactions t\n",
+        "    JOIN workspace.default.silveraccounts a\n",
+        "      ON t.ACCOUNT_ID = a.ACCOUNT_ID\n",
+        "GROUP BY\n",
+        "  a.CUSTOMER_ID\n",
+        "HAVING\n",
+        "  COUNT(*) > 10\n",
+        "  OR AVG(t.TRANSACTION_AMOUNT) > 60000\n",
+        "ORDER BY\n",
+        "  Risk_Score DESC\n",
+        "LIMIT 10"
+      ],
+      "columns": [
+        {
+          "displayName": "Risk Category",
+          "description": "Categorizes customers into High, Medium, or Low risk based on their risk score",
+          "expression": "CASE WHEN `Risk_Score` >= 52 THEN 'High Risk' WHEN `Risk_Score` >= 50 THEN 'Medium Risk' ELSE 'Low Risk' END"
+        }
+      ]
+    },
+    {
+      "name": "high_risk_count",
+      "displayName": "high_risk_count",
+      "queryLines": [
+        "SELECT\n",
+        "  COUNT(*) AS high_risk_customers\n",
+        "FROM\n",
+        "  (\n",
+        "    SELECT\n",
+        "      a.CUSTOMER_ID,\n",
+        "      ROUND(\n",
+        "        (COUNT(*) * 0.3)\n",
+        "          + (AVG(t.TRANSACTION_AMOUNT) / 1000 * 0.5)\n",
+        "          + (SUM(t.TRANSACTION_AMOUNT) / 10000 * 0.2),\n",
+        "        2\n",
+        "      ) AS Risk_Score\n",
+        "    FROM\n",
+        "      workspace.default.silvertransactions t\n",
+        "        JOIN workspace.default.silveraccounts a\n",
+        "          ON t.ACCOUNT_ID = a.ACCOUNT_ID\n",
+        "    GROUP BY\n",
+        "      a.CUSTOMER_ID\n",
+        "  ) subquery\n",
+        "WHERE\n",
+        "  Risk_Score > 50"
+      ]
+    },
+    {
+      "name": "risk_kpis",
+      "displayName": "risk_kpis",
+      "queryLines": [
+        "SELECT\n",
+        "  SUM(total_amount) AS total_atrisk_amount,\n",
+        "  AVG(Risk_Score) AS avg_risk_score,\n",
+        "  COUNT(*) AS total_customers_monitored\n",
+        "FROM\n",
+        "  (\n",
+        "    SELECT\n",
+        "      a.CUSTOMER_ID,\n",
+        "      SUM(t.TRANSACTION_AMOUNT) AS total_amount,\n",
+        "      ROUND(\n",
+        "        (COUNT(*) * 0.3)\n",
+        "          + (AVG(t.TRANSACTION_AMOUNT) / 1000 * 0.5)\n",
+        "          + (SUM(t.TRANSACTION_AMOUNT) / 10000 * 0.2),\n",
+        "        2\n",
+        "      ) AS Risk_Score\n",
+        "    FROM\n",
+        "      workspace.default.silvertransactions t\n",
+        "        JOIN workspace.default.silveraccounts a\n",
+        "          ON t.ACCOUNT_ID = a.ACCOUNT_ID\n",
+        "    GROUP BY\n",
+        "      a.CUSTOMER_ID\n",
+        "    HAVING\n",
+        "      COUNT(*) > 10\n",
+        "      OR AVG(t.TRANSACTION_AMOUNT) > 60000\n",
+        "  ) subquery\n",
+        "WHERE\n",
+        "  Risk_Score > 50"
+      ]
+    },
+    {
+      "name": "risk_distribution",
+      "displayName": "risk_score_distribution",
+      "queryLines": [
+        "SELECT\n",
+        "  ROUND(Risk_Score) AS risk_bucket,\n",
+        "  COUNT(*) AS customer_count\n",
+        "FROM\n",
+        "  (\n",
+        "    SELECT\n",
+        "      a.CUSTOMER_ID,\n",
+        "      ROUND(\n",
+        "        (COUNT(*) * 0.3)\n",
+        "          + (AVG(t.TRANSACTION_AMOUNT) / 1000 * 0.5)\n",
+        "          + (SUM(t.TRANSACTION_AMOUNT) / 10000 * 0.2),\n",
+        "        2\n",
+        "      ) AS Risk_Score\n",
+        "    FROM\n",
+        "      workspace.default.silvertransactions t\n",
+        "        JOIN workspace.default.silveraccounts a\n",
+        "          ON t.ACCOUNT_ID = a.ACCOUNT_ID\n",
+        "    GROUP BY\n",
+        "      a.CUSTOMER_ID\n",
+        "    HAVING\n",
+        "      COUNT(*) > 10\n",
+        "      OR AVG(t.TRANSACTION_AMOUNT) > 60000\n",
+        "  ) subquery\n",
+        "GROUP BY\n",
+        "  risk_bucket\n",
+        "ORDER BY\n",
+        "  risk_bucket"
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "name": "4dd729cd",
+      "displayName": "Customer & Transaction Analytics",
+      "layout": [
+        {
+          "widget": {
+            "name": "total_txn",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "business_summary",
+                  "fields": [
+                    {
+                      "name": "total_transactions",
+                      "expression": "`total_transactions`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "title": "Total Transactions",
+                "showTitle": true
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "total_transactions",
+                  "format": {
+                    "type": "number-plain",
+                    "decimalPlaces": {
+                      "type": "exact",
+                      "places": 0
+                    },
+                    "abbreviation": "compact"
+                  },
+                  "displayName": "Total Transactions"
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 1,
+            "width": 4,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "total_rev",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "business_summary",
+                  "fields": [
+                    {
+                      "name": "total_revenue",
+                      "expression": "`total_revenue`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "title": "Total Revenue",
+                "showTitle": true
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "total_revenue",
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "USD",
+                    "decimalPlaces": {
+                      "type": "exact",
+                      "places": 1
+                    },
+                    "abbreviation": "compact"
+                  },
+                  "displayName": "Total Revenue"
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 1,
+            "width": 4,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "avg_txn",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "business_summary",
+                  "fields": [
+                    {
+                      "name": "avg_transaction",
+                      "expression": "`avg_transaction`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "title": "Avg Transaction",
+                "showTitle": true
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "avg_transaction",
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "USD",
+                    "decimalPlaces": {
+                      "type": "exact",
+                      "places": 2
+                    },
+                    "abbreviation": "compact"
+                  },
+                  "displayName": "Avg Transaction"
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 8,
+            "y": 1,
+            "width": 4,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "d1914aa5",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "monthly_revenue_sql",
+                  "fields": [
+                    {
+                      "name": "month",
+                      "expression": "`month`"
+                    },
+                    {
+                      "name": "sum(revenue)",
+                      "expression": "SUM(`revenue`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "title": "Monthly Revenue Trend",
+                "showTitle": true
+              },
+              "widgetType": "line",
+              "encodings": {
+                "x": {
+                  "fieldName": "month",
+                  "displayName": "Month",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "sum(revenue)",
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "USD",
+                    "decimalPlaces": {
+                      "type": "exact",
+                      "places": 0
+                    },
+                    "abbreviation": "compact"
+                  },
+                  "displayName": "Revenue",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 3,
+            "width": 5,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "c32c6141",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "top_customers",
+                  "fields": [
+                    {
+                      "name": "sum(total_spent)",
+                      "expression": "SUM(`total_spent`)"
+                    },
+                    {
+                      "name": "CUSTOMER_ID",
+                      "expression": "`CUSTOMER_ID`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "title": "Top 5 Customers by Spending",
+                "showTitle": true
+              },
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "sum(total_spent)",
+                  "displayName": "Total Spent",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "y": {
+                  "fieldName": "CUSTOMER_ID",
+                  "displayName": "Customer ID",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "label": {
+                  "show": true
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 5,
+            "y": 3,
+            "width": 7,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "monthly_txn_area",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "monthly_txn_count",
+                  "fields": [
+                    {
+                      "name": "month",
+                      "expression": "`month`"
+                    },
+                    {
+                      "name": "sum(txn_count)",
+                      "expression": "SUM(`txn_count`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "title": "Monthly Transaction Count",
+                "showTitle": true
+              },
+              "widgetType": "area",
+              "encodings": {
+                "x": {
+                  "fieldName": "month",
+                  "displayName": "Month",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "sum(txn_count)",
+                  "format": {
+                    "type": "number-plain",
+                    "decimalPlaces": {
+                      "type": "exact",
+                      "places": 0
+                    },
+                    "abbreviation": "compact"
+                  },
+                  "displayName": "Transaction Count",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 8,
+            "width": 4,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "8ae43e77",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "txn_type_analysis",
+                  "fields": [
+                    {
+                      "name": "sum(total_amount)",
+                      "expression": "SUM(`total_amount`)"
+                    },
+                    {
+                      "name": "TRANSACTION_TYPE",
+                      "expression": "`TRANSACTION_TYPE`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "title": "Transaction Type Distribution",
+                "showTitle": true
+              },
+              "widgetType": "pie",
+              "encodings": {
+                "angle": {
+                  "fieldName": "sum(total_amount)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "USD",
+                    "decimalPlaces": {
+                      "type": "exact",
+                      "places": 0
+                    },
+                    "abbreviation": "compact"
+                  },
+                  "displayName": "Total Amount"
+                },
+                "color": {
+                  "fieldName": "TRANSACTION_TYPE",
+                  "displayName": "Transaction Type",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "label": {
+                  "show": true
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 8,
+            "width": 4,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "96607320",
+            "queries": [
+              {
+                "name": "dashboards/01f13a7b9e0b1b83bc14737fa4966e77/datasets/01f13a867ea6109eaa0c27913f8c2157_TRANSACTION_TYPE",
+                "query": {
+                  "datasetName": "txn_type_analysis",
+                  "fields": [
+                    {
+                      "name": "TRANSACTION_TYPE",
+                      "expression": "`TRANSACTION_TYPE`"
+                    },
+                    {
+                      "name": "TRANSACTION_TYPE_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "title": "Transaction Type",
+                "showTitle": true
+              },
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "TRANSACTION_TYPE",
+                    "queryName": "dashboards/01f13a7b9e0b1b83bc14737fa4966e77/datasets/01f13a867ea6109eaa0c27913f8c2157_TRANSACTION_TYPE"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 4,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "month_filter",
+            "queries": [
+              {
+                "name": "dashboards/01f13a7b9e0b1b83bc14737fa4966e77/datasets/01f13a85575b1c648bf197f784bcfebe_month",
+                "query": {
+                  "datasetName": "monthly_revenue_sql",
+                  "fields": [
+                    {
+                      "name": "month",
+                      "expression": "`month`"
+                    },
+                    {
+                      "name": "month_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "dashboards/01f13a7b9e0b1b83bc14737fa4966e77/datasets/01f13a89806016d9ac5a997fcc9dea8e_month",
+                "query": {
+                  "datasetName": "monthly_txn_count",
+                  "fields": [
+                    {
+                      "name": "month",
+                      "expression": "`month`"
+                    },
+                    {
+                      "name": "month_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "title": "Month",
+                "showTitle": true
+              },
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "month",
+                    "queryName": "dashboards/01f13a7b9e0b1b83bc14737fa4966e77/datasets/01f13a85575b1c648bf197f784bcfebe_month"
+                  },
+                  {
+                    "fieldName": "month",
+                    "queryName": "dashboards/01f13a7b9e0b1b83bc14737fa4966e77/datasets/01f13a89806016d9ac5a997fcc9dea8e_month"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 0,
+            "width": 4,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "branch_revenue_chart",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "branch_revenue",
+                  "fields": [
+                    {
+                      "name": "BRANCH_ID",
+                      "expression": "`BRANCH_ID`"
+                    },
+                    {
+                      "name": "sum(branch_revenue)",
+                      "expression": "SUM(`branch_revenue`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "title": "Revenue by Branch",
+                "showTitle": true
+              },
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "BRANCH_ID",
+                  "displayName": "Branch ID",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "sum(branch_revenue)",
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "USD",
+                    "decimalPlaces": {
+                      "type": "exact",
+                      "places": 0
+                    },
+                    "abbreviation": "compact"
+                  },
+                  "displayName": "Branch Revenue",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "label": {
+                  "show": true
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 8,
+            "y": 8,
+            "width": 4,
+            "height": 5
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1"
+    },
+    {
+      "name": "78edaf9f",
+      "displayName": "Customer Risk & Fraud Insights",
+      "layout": [
+        {
+          "widget": {
+            "name": "09f92825",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "high_risk_customers",
+                  "fields": [
+                    {
+                      "name": "CUSTOMER_ID",
+                      "expression": "`CUSTOMER_ID`"
+                    },
+                    {
+                      "name": "sum(total_amount)",
+                      "expression": "SUM(`total_amount`)"
+                    },
+                    {
+                      "name": "avg(avg_amount)",
+                      "expression": "AVG(`avg_amount`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "title": "High Risk Customers",
+                "showTitle": true
+              },
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "CUSTOMER_ID",
+                  "displayName": "Customer ID",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "primary": {
+                    "fields": [
+                      {
+                        "fieldName": "sum(total_amount)",
+                        "displayName": "Total Amount"
+                      }
+                    ],
+                    "scale": {
+                      "type": "quantitative"
+                    }
+                  },
+                  "secondary": {
+                    "fields": [
+                      {
+                        "fieldName": "avg(avg_amount)",
+                        "displayName": "Avg Amount"
+                      }
+                    ],
+                    "scale": {
+                      "type": "quantitative"
+                    }
+                  }
+                },
+                "label": {
+                  "show": true
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 2,
+            "width": 6,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "d6181da3",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "high_risk_customers",
+                  "fields": [
+                    {
+                      "name": "CUSTOMER_ID",
+                      "expression": "`CUSTOMER_ID`"
+                    },
+                    {
+                      "name": "risk_score",
+                      "expression": "`risk_score`"
+                    },
+                    {
+                      "name": "txn_count",
+                      "expression": "`txn_count`"
+                    },
+                    {
+                      "name": "total_amount",
+                      "expression": "`total_amount`"
+                    },
+                    {
+                      "name": "avg_amount",
+                      "expression": "`avg_amount`"
+                    },
+                    {
+                      "name": "max_amount",
+                      "expression": "`max_amount`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "title": "Risk Score Details",
+                "showTitle": true
+              },
+              "rowsPerPage": 25,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "CUSTOMER_ID",
+                    "displayName": "Customer ID"
+                  },
+                  {
+                    "fieldName": "risk_score",
+                    "displayName": "Risk Score"
+                  },
+                  {
+                    "fieldName": "txn_count",
+                    "displayName": "Txn Count"
+                  },
+                  {
+                    "fieldName": "total_amount",
+                    "displayName": "Total Amount"
+                  },
+                  {
+                    "fieldName": "avg_amount",
+                    "displayName": "Avg Amount"
+                  },
+                  {
+                    "fieldName": "max_amount",
+                    "displayName": "Max Amount"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 7,
+            "width": 6,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "315029ce",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "customer_risk_scores",
+                  "fields": [
+                    {
+                      "name": "Risk Category",
+                      "expression": "`Risk Category`"
+                    },
+                    {
+                      "name": "Risk_Score",
+                      "expression": "`Risk_Score`"
+                    },
+                    {
+                      "name": "Txn_Count",
+                      "expression": "`Txn_Count`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "title": "Customer Risk Scores",
+                "showTitle": true
+              },
+              "widgetType": "scatter",
+              "encodings": {
+                "x": {
+                  "fieldName": "Txn_Count",
+                  "displayName": "Transaction Count",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "y": {
+                  "fieldName": "Risk_Score",
+                  "displayName": "Risk Score",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "Risk Category",
+                  "displayName": "Risk Category",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "size": {
+                  "fieldName": "Risk_Score",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Risk Score"
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 2,
+            "width": 6,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "3bc414c6",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "high_risk_count",
+                  "fields": [
+                    {
+                      "name": "high_risk_customers",
+                      "expression": "`high_risk_customers`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "title": "High Risk Customers",
+                "showTitle": true
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "high_risk_customers",
+                  "format": {
+                    "type": "number-plain",
+                    "decimalPlaces": {
+                      "type": "exact",
+                      "places": 0
+                    },
+                    "abbreviation": "compact"
+                  },
+                  "displayName": "High Risk Customers"
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 3,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "total_atrisk_amount",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "risk_kpis",
+                  "fields": [
+                    {
+                      "name": "total_atrisk_amount",
+                      "expression": "`total_atrisk_amount`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "title": "Total At-Risk Amount",
+                "showTitle": true
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "total_atrisk_amount",
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "USD",
+                    "decimalPlaces": {
+                      "type": "exact",
+                      "places": 1
+                    },
+                    "abbreviation": "compact"
+                  },
+                  "displayName": "Total At-Risk Amount"
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 0,
+            "width": 3,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "avg_risk_score",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "risk_kpis",
+                  "fields": [
+                    {
+                      "name": "avg_risk_score",
+                      "expression": "`avg_risk_score`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "title": "Avg Risk Score",
+                "showTitle": true
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "avg_risk_score",
+                  "format": {
+                    "type": "number-plain",
+                    "decimalPlaces": {
+                      "type": "exact",
+                      "places": 2
+                    },
+                    "abbreviation": "none"
+                  },
+                  "displayName": "Avg Risk Score"
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 0,
+            "width": 3,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "total_monitored",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "risk_kpis",
+                  "fields": [
+                    {
+                      "name": "total_customers_monitored",
+                      "expression": "`total_customers_monitored`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "title": "Customers Monitored",
+                "showTitle": true
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "total_customers_monitored",
+                  "format": {
+                    "type": "number-plain",
+                    "decimalPlaces": {
+                      "type": "exact",
+                      "places": 0
+                    },
+                    "abbreviation": "compact"
+                  },
+                  "displayName": "Total Customers Monitored"
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 9,
+            "y": 0,
+            "width": 3,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "a381bf95",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "risk_distribution",
+                  "fields": [
+                    {
+                      "name": "risk_bucket",
+                      "expression": "`risk_bucket`"
+                    },
+                    {
+                      "name": "sum(customer_count)",
+                      "expression": "SUM(`customer_count`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "title": "Risk Score Distribution",
+                "showTitle": true
+              },
+              "widgetType": "histogram",
+              "encodings": {
+                "x": {
+                  "fieldName": "risk_bucket",
+                  "displayName": "Risk Bucket",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "y": {
+                  "fieldName": "sum(customer_count)",
+                  "format": {
+                    "type": "number-plain",
+                    "decimalPlaces": {
+                      "type": "exact",
+                      "places": 0
+                    },
+                    "abbreviation": "none"
+                  },
+                  "displayName": "Customer Count",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "label": {
+                  "show": true
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 7,
+            "width": 6,
+            "height": 5
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1"
+    }
+  ],
+  "uiSettings": {
+    "theme": {
+      "widgetHeaderAlignment": "ALIGNMENT_UNSPECIFIED"
+    },
+    "applyModeEnabled": false
+  }
+}
