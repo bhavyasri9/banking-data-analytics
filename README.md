@@ -92,7 +92,7 @@ A risk scoring model is implemented using:
 - High-value transactions indicate potential anomalies  
 - Helps in early detection of risky behavior  
 
-## 📈 Dashboard
+## Dashboard
 The dashboard is built using Databricks SQL and includes:
 - KPI cards for quick insights  
 - Area charts for trend analysis  
