@@ -1,5 +1,6 @@
 # banking-data-analytics
 capgemini project
+[![View Project]([https://img.shields.io/badge/View-Project-blue?style=for-the-badge](https://youtu.be/h6x7DUQ4TQI))]
 
 # Banking Data Analytics Pipeline using Delta Live Tables
 
